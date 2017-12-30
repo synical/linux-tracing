@@ -1,4 +1,12 @@
 from numpy import percentile
+from tracing import ftrace
+
+"""
+TODO
+    * Check for 0 data in in compute_io_stats
+    * Add mandatory argument for device to trace
+    * Filter trace output on device
+"""
 
 def compute_io_stats(io_times):
     io_stats = {}
@@ -10,32 +18,43 @@ def compute_io_stats(io_times):
     io_stats["count"] = len(io_times)
     return io_stats
 
-def get_io_times(lines):
+def get_rq_times(issued, completed):
     io_times = []
-    queued = [filter(None, x.replace(":", "").split(" ")) for x in lines if "block_bio_queue:" in x]
-    completed = [filter(None, x.replace(":", "").split(" ")) for x in lines if "block_bio_complete:" in x]
-    for i, q in enumerate(queued):
-        q_offset = q[6]
-        q_time = float(q[2])
+    for i in issued:
+        i_dev = i[4]
+        i_offset = i[-4]
+        i_time = float(i[2])
         for c in completed:
-            c_offset = c[6]
+            c_dev = c[4]
+            c_offset = c[-4]
             c_time = float(c[2])
-            if q_offset == c_offset:
-                io_times.append((c_time - q_time) * 1000)
+            if i_offset == c_offset and i_dev == c_dev:
+                io_times.append((c_time - i_time) * 1000)
                 completed.remove(c)
                 break
     return io_times
-    
+
 def print_io_stats(io_stats):
-        print "IO Latency Statistics (ms):\n"
+        print "\nIO Latency Statistics (ms):\n"
         for k, v in io_stats.iteritems():
             print "%s\t\t%s" % (k, v)
 
+def trace_io():
+    ft = ftrace.Ftrace()
+    ft.enable_block_tracing()
+    issued = []
+    completed = []
+
+    for line in ft.get_trace_data():
+        if "block_rq_issue" in line:
+            issued.append(filter(None, line.replace(":", "").split(" ")))
+        if "block_rq_complete" in line:
+            completed.append(filter(None, line.replace(":", "").split(" ")))
+    print_io_stats(compute_io_stats(get_rq_times(issued, completed)))
+    ft.disable_block_tracing()
+
 def main():
-    with open("luks-latency") as f:
-        io_times = get_io_times(f.readlines())
-    io_stats = compute_io_stats(io_times)
-    print_io_stats(io_stats)
+    trace_io()
 
 if __name__ == '__main__':
     main()

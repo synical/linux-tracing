@@ -5,7 +5,7 @@ class Ftrace(object):
     def __init__(self):
         self.tracing_path = "/sys/kernel/debug/tracing"
         self.current_tracer_path = self.tracing_path + "/current_tracer"
-        self.trace_data_path = self.tracing_path + "/trace"
+        self.trace_pipe_path = self.tracing_path + "/trace_pipe"
         self.tracing_on_path = self.tracing_path + "/current_tracer"
         self.block_trace_enable_path = self.tracing_path + "/events/block/enable"
         self.pre_flight_checks()
@@ -40,9 +40,13 @@ class Ftrace(object):
         return setting
 
     def get_trace_data(self):
-        with open(self.trace_data_path) as f:
-            data = f.read(4096)
-        return data
+        with open(self.trace_pipe_path) as f:
+            try:
+                print "Collecting trace data. Ctrl-C to stop."
+                while True:
+                    yield f.readline()
+            except KeyboardInterrupt:
+                f.close()
 
     def set_value(self, value, path):
         with open(path, "w") as f:
