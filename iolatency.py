@@ -1,11 +1,7 @@
+import argparse
+
 from numpy import percentile
 from tracing import ftrace
-
-"""
-TODO
-    * Add mandatory argument for device to trace
-    * Filter trace output on device
-"""
 
 def compute_io_stats(io_times):
     io_stats = {}
@@ -40,21 +36,27 @@ def get_rq_times(issued, completed):
                 break
     return io_times
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--device", action="store", dest="device", required=True, help="<MAJ,MIN>")
+    args = parser.parse_args()
+    return args
+
 def print_io_stats(io_stats):
         print "\nIO Latency Statistics (ms):\n"
         for k, v in io_stats.iteritems():
             print "%s\t\t%s" % (k, v)
 
-def trace_io():
+def trace_io(device):
     ft = ftrace.Ftrace()
     ft.enable_block_tracing()
     issued = []
     completed = []
 
     for line in ft.get_trace_data():
-        if "block_rq_issue" in line:
+        if "block_rq_issue" in line and device in line:
             issued.append(filter(None, line.replace(":", "").split(" ")))
-        if "block_rq_complete" in line:
+        if "block_rq_complete" in line and device in line:
             completed.append(filter(None, line.replace(":", "").split(" ")))
 
     io_times = get_rq_times(issued, completed)
@@ -64,7 +66,8 @@ def trace_io():
     disable_and_exit(ft)
 
 def main():
-    trace_io()
+    args = parse_args()
+    trace_io(args.device)
 
 if __name__ == '__main__':
     main()
