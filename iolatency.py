@@ -3,7 +3,6 @@ from tracing import ftrace
 
 """
 TODO
-    * Check for 0 data in in compute_io_stats
     * Add mandatory argument for device to trace
     * Filter trace output on device
 """
@@ -17,6 +16,13 @@ def compute_io_stats(io_times):
     io_stats["max"] = max(io_times)
     io_stats["count"] = len(io_times)
     return io_stats
+
+def disable_and_exit(ft, message=False):
+    ft.disable_block_tracing()
+    if message:
+        print message
+        exit(1)
+    exit(0)
 
 def get_rq_times(issued, completed):
     io_times = []
@@ -50,8 +56,12 @@ def trace_io():
             issued.append(filter(None, line.replace(":", "").split(" ")))
         if "block_rq_complete" in line:
             completed.append(filter(None, line.replace(":", "").split(" ")))
-    print_io_stats(compute_io_stats(get_rq_times(issued, completed)))
-    ft.disable_block_tracing()
+
+    io_times = get_rq_times(issued, completed)
+    if not io_times:
+        disable_and_exit(ft, "No I/O events found.")
+    print_io_stats(compute_io_stats(io_times))
+    disable_and_exit(ft)
 
 def main():
     trace_io()
