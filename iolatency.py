@@ -3,6 +3,11 @@ import argparse
 from numpy import percentile
 from tracing import ftrace
 
+"""
+TODO
+    * Add arg to filter on reads/writes
+"""
+
 def compute_io_stats(io_times):
     io_stats = {}
     io_stats["min"] = min(io_times)
