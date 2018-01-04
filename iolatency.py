@@ -5,8 +5,10 @@ from tracing import ftrace
 
 """
 TODO
-    * Add arg to filter on reads/writes
 """
+
+# http://elixir.free-electrons.com/linux/v3.14/source/include/linux/blk_types.h
+# http://elixir.free-electrons.com/linux/v3.14/source/kernel/trace/blktrace.c#L1803
 
 class IoLatency(object):
 
@@ -51,14 +53,23 @@ class IoLatency(object):
             for k, v in self.io_stats.iteritems():
                 print "%s\t\t%s" % (k, v)
 
-    def trace_io(self, device):
+    def trace_io(self, device, operation=False):
         self.ft.enable_block_tracing()
         for line in self.ft.get_trace_data():
             if "block_rq_issue" in line and device in line:
-                self.issued.append(filter(None, line.replace(":", "").split(" ")))
+                split_line = filter(None, line.replace(":", "").split(" "))
+                if not operation:
+                    self.issued.append(split_line)
+                    continue
+                if operation in split_line[5]:
+                    self.issued.append(split_line)
             if "block_rq_complete" in line and device in line:
-                self.completed.append(filter(None, line.replace(":", "").split(" ")))
-
+                split_line = filter(None, line.replace(":", "").split(" "))
+                if not operation:
+                    self.completed.append(split_line)
+                    continue
+                if operation in split_line[5]:
+                    self.completed.append(split_line)
         self.get_rq_times()
         if not self.io_times:
             self.disable_and_exit("No I/O events found.")
@@ -69,13 +80,14 @@ class IoLatency(object):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--device", action="store", dest="device", required=True, help="<MAJ,MIN>")
+    parser.add_argument("-o", "--operation", action="store", dest="operation", required=False, help="<W,R>")
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
     io = IoLatency()
-    io.trace_io(args.device)
+    io.trace_io(args.device, args.operation)
 
 if __name__ == '__main__':
     main()
