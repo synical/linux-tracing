@@ -5,6 +5,7 @@ from tracing import ftrace
 
 """
 TODO
+    * Support bio events
 """
 
 # http://elixir.free-electrons.com/linux/v3.14/source/include/linux/blk_types.h
