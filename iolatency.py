@@ -6,6 +6,9 @@ from tracing import ftrace
 """
 TODO
     * Support bio events
+    * Roll output with interval
+    * Add option to include queue time
+    * Add histogram output support
 """
 
 # http://elixir.free-electrons.com/linux/v3.14/source/include/linux/blk_types.h
