@@ -9,6 +9,7 @@ class Ftrace(object):
         self.current_tracer_path = self.tracing_path + "/current_tracer"
         self.trace_pipe_path = self.tracing_path + "/trace_pipe"
         self.tracing_on_path = self.tracing_path + "/current_tracer"
+        self.tracing_options_path = self.tracing_path + "/trace_options"
         self.block_trace_enable_path = self.tracing_path + "/events/block/enable"
         self.pre_flight_checks()
 
@@ -23,6 +24,7 @@ class Ftrace(object):
         self.set_value("nop", self.current_tracer_path)
 
     def enable_block_tracing(self):
+        self.set_value("noirq-info", self.tracing_options_path)
         self.set_value("1", self.block_trace_enable_path)
         self.set_value("blk", self.current_tracer_path)
 
