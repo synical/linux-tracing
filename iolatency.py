@@ -50,7 +50,6 @@ class IoLatency(object):
             for c in self.completed:
                 c_dev = c[4]
                 c_offset = c[-4]
-                # TODO Fix bug here where field is not correct
                 c_time = float(c[2])
                 if i_offset == c_offset and i_dev == c_dev:
                     self.io_times.append((c_time - i_time) * 1000)
@@ -66,8 +65,8 @@ class IoLatency(object):
         self.ft.enable_block_tracing()
         for line in self.ft.get_trace_data():
             if self.io_start in line and device in line:
-                print line
                 split_line = filter(None, line.replace(":", "").split(" "))
+                split_line[0].replace(" ", "")
                 if not operation:
                     self.issued.append(split_line)
                     continue
