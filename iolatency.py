@@ -7,7 +7,6 @@ from tracing import ftrace
 TODO
     * Roll output with interval
     * Add histogram output support
-    * Filter block tracing on event type directly in ftrace
 """
 
 # https://elixir.free-electrons.com/linux/v3.14/source/include/trace/events/block.h
@@ -67,7 +66,8 @@ class IoLatency(object):
                 print "%s\t\t%s" % (k, v)
 
     def trace_io(self, device, operation=False):
-        self.ft.enable_block_tracing()
+        self.ft.enable_block_tracing(events=[self.io_start, self.io_end])
+
         for line in self.ft.get_trace_data():
             if self.io_start in line and device in line:
                 split_line = filter(None, line.replace(":", "").split(" "))
@@ -85,6 +85,7 @@ class IoLatency(object):
                 if operation in split_line[5]:
                     self.completed.append(split_line)
         self.get_rq_times()
+
         if not self.io_times:
             self.disable_and_exit("No I/O events found.")
         self.compute_io_stats()
