@@ -5,27 +5,32 @@ from tracing import ftrace
 
 """
 TODO
-    * Support bio events
     * Roll output with interval
     * Add histogram output support
     * Filter block tracing on event type directly in ftrace
 """
 
+# https://elixir.free-electrons.com/linux/v3.14/source/include/trace/events/block.h
 # http://elixir.free-electrons.com/linux/v3.14/source/include/linux/blk_types.h
 # http://elixir.free-electrons.com/linux/v3.14/source/kernel/trace/blktrace.c#L1803
 
 class IoLatency(object):
 
-    def __init__(self, queue=False):
+    def __init__(self, queue=False, bio=False):
         self.ft = ftrace.Ftrace()
         self.issued = []
         self.completed = []
         self.io_stats = {}
         self.io_times = []
-        if queue:
-            self.io_start = "block_rq_insert"
+        if bio:
+            self.io_start = "block_bio_queue"
+            self.io_end = "block_bio_complete"
         else:
-            self.io_start = "block_rq_issue"
+            if queue:
+                self.io_start = "block_rq_insert"
+            else:
+                self.io_start = "block_rq_issue"
+            self.io_end = "block_rq_complete"
 
     def compute_io_stats(self):
         self.io_stats["min"] = min(self.io_times)
@@ -72,7 +77,7 @@ class IoLatency(object):
                     continue
                 if operation in split_line[5]:
                     self.issued.append(split_line)
-            if "block_rq_complete" in line and device in line:
+            if self.io_end in line and device in line:
                 split_line = filter(None, line.replace(":", "").split(" "))
                 if not operation:
                     self.completed.append(split_line)
@@ -91,12 +96,13 @@ def parse_args():
     parser.add_argument("-d", "--device", action="store", dest="device", required=True, help="<MAJ,MIN>")
     parser.add_argument("-o", "--operation", action="store", dest="operation", required=False, help="<W,R>")
     parser.add_argument("-q", "--queue", action="store_true", dest="queue", required=False, help="Use block_rq_insert event as start of I/O")
+    parser.add_argument("-b", "--bio", action="store_true", dest="bio", required=False, help="Trace bio operations (useful for device mappers)")
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
-    io = IoLatency(queue=args.queue)
+    io = IoLatency(queue=args.queue, bio=args.bio)
     io.trace_io(args.device, args.operation)
 
 if __name__ == '__main__':
