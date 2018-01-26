@@ -1,11 +1,11 @@
 import argparse
 
 from numpy import percentile
+from time import sleep
 from tracing import ftrace
 
 """
 TODO
-    * Roll output with interval
     * Add histogram output support
 """
 
@@ -31,13 +31,22 @@ class IoLatency(object):
                 self.io_start = "block_rq_issue"
             self.io_end = "block_rq_complete"
 
+    def clear_io_stats(self):
+        self.issued = []
+        self.completed = []
+        self.io_stats = {}
+        self.io_times = []
+
     def compute_io_stats(self):
-        self.io_stats["min"] = min(self.io_times)
-        self.io_stats["p50"] = percentile(self.io_times, 50)
-        self.io_stats["p99"] = percentile(self.io_times, 99)
-        self.io_stats["p999"] = percentile(self.io_times, 99.9)
-        self.io_stats["max"] = max(self.io_times)
-        self.io_stats["count"] = len(self.io_times)
+        try:
+            self.io_stats["min"] = min(self.io_times)
+            self.io_stats["p50"] = percentile(self.io_times, 50)
+            self.io_stats["p99"] = percentile(self.io_times, 99)
+            self.io_stats["p999"] = percentile(self.io_times, 99.9)
+            self.io_stats["max"] = max(self.io_times)
+            self.io_stats["count"] = len(self.io_times)
+        except ValueError:
+            return
 
     def disable_and_exit(self, message=False):
         self.ft.disable_block_tracing()
@@ -61,36 +70,40 @@ class IoLatency(object):
                     break
 
     def print_io_stats(self):
+            self.get_rq_times()
+            self.compute_io_stats()
             print "\nIO Latency Statistics (ms):\n"
             for k, v in self.io_stats.iteritems():
                 print "%s\t\t%s" % (k, v)
 
-    def trace_io(self, device, operation=False):
+    def trace_io(self, device, operation=False, interval=10):
         self.ft.enable_block_tracing(events=[self.io_start, self.io_end])
+        try:
+            print "Collecting trace data. Ctrl-C to stop."
+            while True:
+                sleep(float(interval))
 
-        for line in self.ft.get_trace_data():
-            if self.io_start in line and device in line:
-                split_line = filter(None, line.replace(":", "").split(" "))
-                split_line[0].replace(" ", "")
-                if not operation:
-                    self.issued.append(split_line)
-                    continue
-                if operation in split_line[5]:
-                    self.issued.append(split_line)
-            if self.io_end in line and device in line:
-                split_line = filter(None, line.replace(":", "").split(" "))
-                if not operation:
-                    self.completed.append(split_line)
-                    continue
-                if operation in split_line[5]:
-                    self.completed.append(split_line)
-        self.get_rq_times()
+                for line in self.ft.get_trace_snapshot():
+                    if self.io_start in line and device in line:
+                        split_line = filter(None, line.replace(":", "").split(" "))
+                        split_line[0].replace(" ", "")
+                        if not operation:
+                            self.issued.append(split_line)
+                            continue
+                        if operation in split_line[5]:
+                            self.issued.append(split_line)
+                    if self.io_end in line and device in line:
+                        split_line = filter(None, line.replace(":", "").split(" "))
+                        if not operation:
+                            self.completed.append(split_line)
+                            continue
+                        if operation in split_line[5]:
+                            self.completed.append(split_line)
 
-        if not self.io_times:
-            self.disable_and_exit("No I/O events found.")
-        self.compute_io_stats()
-        self.print_io_stats()
-        self.disable_and_exit()
+                self.print_io_stats()
+                self.clear_io_stats()
+        except KeyboardInterrupt:
+            self.disable_and_exit()
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -98,13 +111,14 @@ def parse_args():
     parser.add_argument("-o", "--operation", action="store", dest="operation", required=False, help="<W,R>")
     parser.add_argument("-q", "--queue", action="store_true", dest="queue", required=False, help="Use block_rq_insert event as start of I/O")
     parser.add_argument("-b", "--bio", action="store_true", dest="bio", required=False, help="Trace bio operations (useful for device mappers)")
+    parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, required=False, help="Collection interval")
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
     io = IoLatency(queue=args.queue, bio=args.bio)
-    io.trace_io(args.device, args.operation)
+    io.trace_io(args.device, operation=args.operation, interval=args.interval)
 
 if __name__ == '__main__':
     main()

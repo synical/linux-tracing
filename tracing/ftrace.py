@@ -7,17 +7,23 @@ class Ftrace(object):
     def __init__(self):
         self.tracing_path = "/sys/kernel/debug/tracing"
         self.current_tracer_path = self.tracing_path + "/current_tracer"
-        self.trace_pipe_path = self.tracing_path + "/trace_pipe"
+        self.trace_path = self.tracing_path + "/trace"
         self.tracing_on_path = self.tracing_path + "/current_tracer"
         self.tracing_options_path = self.tracing_path + "/trace_options"
         self.block_events_path = self.tracing_path + "/events/block"
         self.block_trace_enable_path = self.block_events_path + "/enable"
+        self.snapshot_path = self.tracing_path + "/snapshot"
+
+        self.CONFIG_FTRACE = "CONFIG_FTRACE"
+        self.CONFIG_TRACER_SNAPSHOT = "CONFIG_TRACER_SNAPSHOT"
+
         self.pre_flight_checks()
 
-    def check_ftrace_configured(self):
+    def check_ftrace_option(self, option):
         with open("/boot/config-%s" % (release())) as f:
-            if "CONFIG_FTRACE=y" in f.read():
+            if "%s=y" % (option) in f.read():
                 return True
+            self.exit_with_error("Kernel not compiled with %s!" % (option))
             return False
 
     def disable_block_tracing(self):
@@ -38,8 +44,7 @@ class Ftrace(object):
         exit(1)
 
     def pre_flight_checks(self):
-        if not self.check_ftrace_configured():
-            self.exit_with_error("Kernel not compiled with CONFIG_FTRACE!")
+        self.check_ftrace_option(self.CONFIG_FTRACE)
         if not os.getuid() == 0:
             self.exit_with_error("This program needs to be executed as root")
         if not os.path.isdir(self.tracing_path):
@@ -56,14 +61,14 @@ class Ftrace(object):
             setting= f.readline().strip()
         return setting
 
-    def get_trace_data(self):
-        with open(self.trace_pipe_path) as f:
-            try:
-                print "Collecting trace data. Ctrl-C to stop."
-                while True:
-                    yield f.readline()
-            except KeyboardInterrupt:
-                f.close()
+    def get_trace_snapshot(self):
+        self.check_ftrace_option(self.CONFIG_TRACER_SNAPSHOT)
+        self.set_value("0", self.snapshot_path)
+        self.set_value("1", self.snapshot_path)
+        self.set_value("0", self.trace_path)
+        with open(self.snapshot_path) as f:
+            data = f.readlines()
+        return data
 
     def set_value(self, value, path):
         with open(path, "w") as f:
