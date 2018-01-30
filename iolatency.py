@@ -9,6 +9,7 @@ from tracing import ftrace
 """
 TODO
     * Add histogram output support
+    * Print results on Ctrl-C
 """
 
 # https://elixir.free-electrons.com/linux/v3.14/source/include/trace/events/block.h
