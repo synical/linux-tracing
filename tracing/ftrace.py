@@ -83,7 +83,7 @@ class Ftrace(object):
 
     def set_uprobe_event(self, uprobe_event):
         self.set_value(uprobe_event, self.tracing_path+"/uprobe_events")
-            
+
     def set_value(self, value, path):
         with open(path, "w") as f:
             f.write(value)
