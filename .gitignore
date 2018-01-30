@@ -1,3 +1,4 @@
 *.pyc
+uprobes
 luks-latency
 test.py
