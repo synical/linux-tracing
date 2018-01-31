@@ -13,6 +13,7 @@ class Ftrace(object):
         self.block_events_path = self.tracing_path + "/events/block"
         self.block_trace_enable_path = self.block_events_path + "/enable"
         self.uprobe_events_path = self.tracing_path + "/events/uprobes"
+        self.uprobe_events_file = self.tracing_path + "/uprobe_events"
         self.uprobe_trace_enable_path = self.uprobe_events_path + "/enable"
         self.snapshot_path = self.tracing_path + "/snapshot"
 
@@ -37,7 +38,8 @@ class Ftrace(object):
 
     def disable_uprobe_tracing(self, message=False):
         self.set_value("0", self.uprobe_trace_enable_path)
-        self.set_value("", self.uprobe_events_path)
+        self.set_value("", self.uprobe_events_file)
+        self.set_value("", self.trace_path)
         if message:
             self.exit_with_error(message)
 
@@ -49,6 +51,13 @@ class Ftrace(object):
         else:
             self.set_value("1", self.block_trace_enable_path)
         self.set_value("blk", self.current_tracer_path)
+
+    def enable_uprobe_tracing(self, events=None):
+        if events:
+            for e in events:
+                self.set_value("1", "%s/%s/enable" % (self.uprobe_events_path, e))
+        else:
+            self.set_value("1", self.uprobe_trace_enable_path)
 
     def exit_with_error(self, message):
         print message
@@ -76,13 +85,14 @@ class Ftrace(object):
         self.check_ftrace_option(self.CONFIG_TRACER_SNAPSHOT)
         self.set_value("0", self.snapshot_path)
         self.set_value("1", self.snapshot_path)
-        self.set_value("0", self.trace_path)
+        self.set_value("", self.trace_path)
         with open(self.snapshot_path) as f:
             data = f.readlines()
         return data
 
     def set_uprobe_event(self, uprobe_event):
-        self.set_value(uprobe_event, self.tracing_path+"/uprobe_events")
+        self.check_ftrace_option(self.CONFIG_UPROBE_EVENTS)
+        self.set_value(uprobe_event, self.uprobe_events_file)
 
     def set_value(self, value, path):
         with open(path, "w") as f:
