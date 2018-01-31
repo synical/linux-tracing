@@ -66,7 +66,11 @@ class IoLatency(object):
             for c in self.completed:
                 c_dev = c[4]
                 c_offset = c[-4]
-                c_time = float(c[2])
+                try:
+                    c_time = float(c[2])
+                except ValueError:
+                    print "Problem converting to float. Row was %s" % (c)
+                    self.disable_and_exit()
                 if i_offset == c_offset and i_dev == c_dev:
                     self.io_times.append((c_time - i_time) * 1000)
                     self.completed.remove(c)
