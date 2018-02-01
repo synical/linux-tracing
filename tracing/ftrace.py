@@ -3,6 +3,10 @@ import os
 from platform import release
 
 class Ftrace(object):
+    """
+      TODO
+        - Change path references to dir or file
+    """
 
     def __init__(self):
         self.tracing_path = "/sys/kernel/debug/tracing"
