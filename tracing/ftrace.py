@@ -8,6 +8,7 @@ class Ftrace(object):
         self.tracing_path = "/sys/kernel/debug/tracing"
         self.current_tracer_path = self.tracing_path + "/current_tracer"
         self.trace_path = self.tracing_path + "/trace"
+        self.trace_option_dir = self.tracing_path + "/options"
         self.tracing_on_path = self.tracing_path + "/current_tracer"
         self.tracing_options_path = self.tracing_path + "/trace_options"
         self.block_events_path = self.tracing_path + "/events/block"
@@ -87,6 +88,9 @@ class Ftrace(object):
         with open(self.snapshot_path) as f:
             data = f.readlines()
         return data
+
+    def set_format_option(self, option, value):
+        self.set_value(value, "%s/%s" % (self.trace_option_dir, option))
 
     def set_uprobe_event(self, uprobe_event):
         self.check_ftrace_option(self.CONFIG_UPROBE_EVENTS)
