@@ -52,12 +52,10 @@ class Ftrace(object):
             self.set_value("1", self.block_trace_enable_path)
         self.set_value("blk", self.current_tracer_path)
 
-    def enable_uprobe_tracing(self, events=None):
-        if events:
-            for e in events:
-                self.set_value("1", "%s/%s/enable" % (self.uprobe_events_path, e))
-        else:
-            self.set_value("1", self.uprobe_trace_enable_path)
+    def enable_uprobe_tracing(self, uprobe_filter=None):
+        if uprobe_filter:
+            self.set_value(uprobe_filter, "%s/filter" % (self.uprobe_events_path))
+        self.set_value("1", self.uprobe_trace_enable_path)
 
     def exit_with_error(self, message):
         print message
