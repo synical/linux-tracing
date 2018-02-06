@@ -24,6 +24,7 @@ class Uprobe(object):
         if self.trace:
             self.ft.set_format_option("userstacktrace", "0")
             self.ft.set_format_option("display-graph", "0")
+            self.ft.set_format_option("sym-userobj", "0")
         self.ft.disable_uprobe_tracing()
 
     def exit_with_error(self, message):
@@ -37,6 +38,7 @@ class Uprobe(object):
             if self.trace:
                 self.ft.set_format_option("userstacktrace", "1")
                 self.ft.set_format_option("display-graph", "1")
+                self.ft.set_format_option("sym-userobj", "1")
             self.ft.set_uprobe_event(self.uprobe_event)
             self.ft.enable_uprobe_tracing(uprobe_filter=self.pid)
         except IOError:
