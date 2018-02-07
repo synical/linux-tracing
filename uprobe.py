@@ -7,8 +7,12 @@ from time import sleep
 from tracing import ftrace
 
 """
-  TODO
-    - User level stacktraces
+Script for interacting with ftrace uprobes
+    Examples:
+        Get size of malloc requests
+        $ sudo python uprobe.py -u "p:malloc_entry /usr/lib64/libc.so.6:0x907a0 mem_requested=%di:u64" -p 18866
+        a.out-18866 [001] d... 156741.233725: malloc_entry: (0x7fe7a77af7a0) mem_requested=1
+        ...
 """
 
 class Uprobe(object):
