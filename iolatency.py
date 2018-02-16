@@ -4,7 +4,7 @@ import argparse
 
 from numpy import percentile
 from time import sleep
-from tracing import ftrace
+from tracing.ftrace import block
 
 """
 TODO
@@ -19,7 +19,7 @@ TODO
 class IoLatency(object):
 
     def __init__(self, queue=False, bio=False):
-        self.ft = ftrace.Ftrace()
+        self.ft = block.Block()
         self.issued = []
         self.completed = []
         self.io_stats = {}
@@ -52,7 +52,7 @@ class IoLatency(object):
             return
 
     def disable_and_exit(self, message=False):
-        self.ft.disable_block_tracing()
+        self.ft.disable_tracing()
         if message:
             print message
             exit(1)
@@ -81,10 +81,10 @@ class IoLatency(object):
             self.compute_io_stats()
             print "\nIO Latency Statistics (ms):\n"
             for k, v in self.io_stats.iteritems():
-                print "%s\t\t%s" % (k, v)
+                print "%s\t\t%0.2f" % (k, v)
 
     def trace_io(self, device, operation=False, interval=10):
-        self.ft.enable_block_tracing(events=[self.io_start, self.io_end])
+        self.ft.enable_tracing(events=[self.io_start, self.io_end])
         try:
             print "Collecting trace data. Ctrl-C to stop."
             while True:

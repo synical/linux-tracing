@@ -9,17 +9,15 @@ class Ftrace(object):
     """
 
     def __init__(self):
-        self.tracing_path = "/sys/kernel/debug/tracing"
+        self.tracing_path = "/sys/kernel/debug/tracing/"
         self.current_tracer_path = self.tracing_path + "/current_tracer"
         self.trace_path = self.tracing_path + "/trace"
         self.trace_option_dir = self.tracing_path + "/options"
         self.tracing_on_path = self.tracing_path + "/current_tracer"
         self.tracing_options_path = self.tracing_path + "/trace_options"
-        self.block_events_path = self.tracing_path + "/events/block"
-        self.block_trace_enable_path = self.block_events_path + "/enable"
         self.uprobe_events_path = self.tracing_path + "/events/uprobes"
         self.uprobe_events_file = self.tracing_path + "/uprobe_events"
-        self.uprobe_trace_enable_path = self.uprobe_events_path + "/enable"
+        self.uprobe_trace_enable_path = self.tracing_path + "/enable"
         self.snapshot_path = self.tracing_path + "/snapshot"
 
         self.CONFIG_FTRACE = "CONFIG_FTRACE"
@@ -35,27 +33,12 @@ class Ftrace(object):
             self.exit_with_error("Kernel not compiled with %s!" % (option))
             return False
 
-    def disable_block_tracing(self, message=False):
-        self.set_value("0", self.block_trace_enable_path)
-        self.set_value("nop", self.current_tracer_path)
-        if message:
-            self.exit_with_error(message)
-
     def disable_uprobe_tracing(self, message=False):
         self.set_value("0", self.uprobe_trace_enable_path)
         self.set_value("", self.uprobe_events_file)
         self.set_value("", self.trace_path)
         if message:
             self.exit_with_error(message)
-
-    def enable_block_tracing(self, events=None):
-        self.set_value("noirq-info", self.tracing_options_path)
-        if events:
-            for e in events:
-                self.set_value("1", "%s/%s/enable" % (self.block_events_path, e))
-        else:
-            self.set_value("1", self.block_trace_enable_path)
-        self.set_value("blk", self.current_tracer_path)
 
     def enable_uprobe_tracing(self, uprobe_filter=None):
         if uprobe_filter:
