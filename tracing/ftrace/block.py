@@ -10,7 +10,7 @@ class Block(Ftrace):
     def disable_tracing(self, message=False):
         self.set_value("0", self.trace_enable_path)
         if message:
-            Ftrace.exit_with_error(message)
+            self.exit_with_error(message)
 
     def enable_tracing(self, events=None):
         self.set_format_option("irq-info", "0")

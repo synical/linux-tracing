@@ -15,9 +15,6 @@ class Ftrace(object):
         self.trace_option_dir = self.tracing_path + "/options"
         self.tracing_on_path = self.tracing_path + "/current_tracer"
         self.tracing_options_path = self.tracing_path + "/trace_options"
-        self.uprobe_events_path = self.tracing_path + "/events/uprobes"
-        self.uprobe_events_file = self.tracing_path + "/uprobe_events"
-        self.uprobe_trace_enable_path = self.tracing_path + "/enable"
         self.snapshot_path = self.tracing_path + "/snapshot"
 
         self.CONFIG_FTRACE = "CONFIG_FTRACE"
@@ -32,18 +29,6 @@ class Ftrace(object):
                 return True
             self.exit_with_error("Kernel not compiled with %s!" % (option))
             return False
-
-    def disable_uprobe_tracing(self, message=False):
-        self.set_value("0", self.uprobe_trace_enable_path)
-        self.set_value("", self.uprobe_events_file)
-        self.set_value("", self.trace_path)
-        if message:
-            self.exit_with_error(message)
-
-    def enable_uprobe_tracing(self, uprobe_filter=None):
-        if uprobe_filter:
-            self.set_value(uprobe_filter, "%s/filter" % (self.uprobe_events_path))
-        self.set_value("1", self.uprobe_trace_enable_path)
 
     def exit_with_error(self, message):
         print message
@@ -78,10 +63,6 @@ class Ftrace(object):
 
     def set_format_option(self, option, value):
         self.set_value(value, "%s/%s" % (self.trace_option_dir, option))
-
-    def set_uprobe_event(self, uprobe_event):
-        self.check_ftrace_option(self.CONFIG_UPROBE_EVENTS)
-        self.set_value(uprobe_event, self.uprobe_events_file)
 
     def set_value(self, value, path):
         with open(path, "w") as f:
