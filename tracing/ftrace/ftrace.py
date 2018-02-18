@@ -3,19 +3,13 @@ import os
 from platform import release
 
 class Ftrace(object):
-    """
-      TODO
-        - Change path references to dir or file
-    """
 
     def __init__(self):
-        self.tracing_path = "/sys/kernel/debug/tracing/"
-        self.current_tracer_path = self.tracing_path + "/current_tracer"
-        self.trace_path = self.tracing_path + "/trace"
-        self.trace_option_dir = self.tracing_path + "/options"
-        self.tracing_on_path = self.tracing_path + "/current_tracer"
-        self.tracing_options_path = self.tracing_path + "/trace_options"
-        self.snapshot_path = self.tracing_path + "/snapshot"
+        self.tracing_dir = "/sys/kernel/debug/tracing/"
+        self.current_tracer_file = self.tracing_dir + "/current_tracer"
+        self.trace_file = self.tracing_dir + "/trace"
+        self.trace_option_dir = self.tracing_dir + "/options"
+        self.snapshot_file = self.tracing_dir + "/snapshot"
 
         self.CONFIG_FTRACE = "CONFIG_FTRACE"
         self.CONFIG_TRACER_SNAPSHOT = "CONFIG_TRACER_SNAPSHOT"
@@ -39,14 +33,14 @@ class Ftrace(object):
         self.check_ftrace_option(self.CONFIG_FTRACE)
         if not os.getuid() == 0:
             self.exit_with_error("This program needs to be executed as root")
-        if not os.path.isdir(self.tracing_path):
+        if not os.path.isdir(self.tracing_dir):
             self.exit_with_error(("Tracing directory %s not found. "
             "Is debugfs mounted?"
-            % (self.tracing_path)))
-        if self.get_setting(self.current_tracer_path) != "nop":
+            % (self.tracing_dir)))
+        if self.get_setting(self.current_tracer_file) != "nop":
             self.exit_with_error(("Tracer currently set. "
                 "Please echo nop > %s before running this program"
-                % (self.current_tracer_path)))
+                % (self.current_tracer_file)))
 
     def get_setting(self, path):
         with open(path) as f:
@@ -55,10 +49,10 @@ class Ftrace(object):
 
     def get_trace_snapshot(self):
         self.check_ftrace_option(self.CONFIG_TRACER_SNAPSHOT)
-        self.set_value("0", self.snapshot_path)
-        self.set_value("1", self.snapshot_path)
-        self.set_value("", self.trace_path)
-        with open(self.snapshot_path) as f:
+        self.set_value("0", self.snapshot_file)
+        self.set_value("1", self.snapshot_file)
+        self.set_value("", self.trace_file)
+        with open(self.snapshot_file) as f:
             data = f.readlines()
         return data
 

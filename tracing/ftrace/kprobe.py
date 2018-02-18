@@ -4,14 +4,14 @@ class Kprobe(Ftrace):
 
     def __init__(self):
         Ftrace.__init__(self)
-        self.events_dir = self.tracing_path + "/events/kprobes/"
-        self.events_file = self.tracing_path + "/kprobe_events"
+        self.events_dir = self.tracing_dir + "/events/kprobes/"
+        self.events_file = self.tracing_dir + "/kprobe_events"
         self.trace_enable_file = self.events_dir + "/enable"
 
     def disable_tracing(self, message=False):
         self.set_value("0", self.trace_enable_file)
         self.set_value("", self.events_file)
-        self.set_value("", self.trace_path)
+        self.set_value("", self.trace_file)
         if message:
             self.exit_with_error(message)
 
