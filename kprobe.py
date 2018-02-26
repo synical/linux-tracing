@@ -17,9 +17,10 @@ Script for interacting with ftrace kprobes
 
 class KprobeTracer(object):
 
-    def __init__(self, kprobe_event, pid=False, period=0.5, stacktrace=False):
-        if pid:
-            self.pid_filter = "common_pid == %s" % (self.pid)
+    def __init__(self, kprobe_event, pid_filter=False, period=0.5, stacktrace=False):
+        self.pid_filter = pid_filter
+        if pid_filter:
+            self.pid_filter = "common_pid == %s" % (self.pid_filter)
         self.ft = kprobe.Kprobe(kprobe_filter=self.pid_filter)
         self.kprobe_event = kprobe_event
         self.period = period
@@ -60,7 +61,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    kp = KprobeTracer(args.kprobe, pid=args.pid, period=args.sample, stacktrace=args.stacktrace)
+    kp = KprobeTracer(args.kprobe, pid_filter=args.pid, period=args.sample, stacktrace=args.stacktrace)
     kp.trace_probe()
 
 if __name__ == '__main__':
