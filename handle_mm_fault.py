@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import re
 
 from tracing.ftrace import kprobe
@@ -10,8 +11,10 @@ from tracing.ftrace import kprobe
 
 class MMFault(object):
 
-    def __init__(self):
-        self.kp = kprobe.Kprobe()
+    def __init__(self, pid_filter=None):
+        if pid_filter != None:
+            pid_filter = "common_pid == %s" % (pid_filter)
+        self.kp = kprobe.Kprobe(kprobe_filter=pid_filter)
         self.fault_flags = [
             "FAULT_FLAG_WRITE",
             "FAULT_FLAG_MKWRITE",
@@ -24,7 +27,7 @@ class MMFault(object):
             "FAULT_FLAG_INSTRUCTION",
         ]
         self.parsed_fault_flags = []
-        self.pid = ""
+        self.fault_pid = ""
         self.probe = "p:handle_mm_fault handle_mm_fault vm_area_struct=%di address=%si flags=%dx"
         self.split_line = []
 
@@ -45,7 +48,7 @@ class MMFault(object):
         self.address = re.search("address=([^\s]+)", probe_string).groups()[0]
 
     def print_fault(self):
-        print "PID: %s" % (self.pid)
+        print "PID: %s" % (self.fault_pid)
         print "vm_area_struct: %s" % (self.vm_area_struct)
         print "Address: %s" % (self.address)
         print "Flags: %s (%s)" % (self.flags, self.parsed_fault_flags)
@@ -57,14 +60,21 @@ class MMFault(object):
         for line in self.kp.get_trace_snapshot():
             if line[0] != "#" and "handle_mm_fault" in line:
                 split_line = filter(None, line.replace(":", "").split(" "))
-                self.pid = split_line[0]
+                self.fault_pid = split_line[0]
                 self.parse_probe_vars(line)
                 self.parse_fault_flags()
                 self.print_fault()
         self.kp.disable_tracing()
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--pid", action="store", dest="pid", required=False, help="PID")
+    args = parser.parse_args()
+    return args
+
 def main():
-    mm = MMFault()
+    args = parse_args()
+    mm = MMFault(pid_filter=args.pid)
     mm.trace()
 
 if __name__ == '__main__':
