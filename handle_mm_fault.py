@@ -12,7 +12,6 @@ class MMFault(object):
 
     def __init__(self):
         self.kp = kprobe.Kprobe()
-        self.probe = "p:handle_mm_fault handle_mm_fault vm_area_struct=%di address=%si flags=%dx"
         self.fault_flags = [
             "FAULT_FLAG_WRITE",
             "FAULT_FLAG_MKWRITE",
@@ -24,22 +23,32 @@ class MMFault(object):
             "FAULT_FLAG_REMOTE",
             "FAULT_FLAG_INSTRUCTION",
         ]
-
-    def get_probe_vars(self, probe_string):
-        flags = re.search("flags=(0x.+)", probe_string).groups()[0]
-        vm_area_struct = re.search("vm_area_struct=([^\s]+)", probe_string).groups()[0]
-        address = re.search("address=([^\s]+)", probe_string).groups()[0]
-        return vm_area_struct, address, flags
+        self.parsed_fault_flags = []
+        self.pid = ""
+        self.probe = "p:handle_mm_fault handle_mm_fault vm_area_struct=%di address=%si flags=%dx"
+        self.split_line = []
 
     def parse_hex(self, hex_string):
         return bin(int(hex_string, 16))[2:].zfill(12)
 
-    def parse_fault_flags(self, flags):
-        print flags,
-        bits = list(reversed(self.parse_hex(flags)))
+    def parse_fault_flags(self):
+        self.parsed_fault_flags = []
+        bits = list(reversed(self.parse_hex(self.flags)))
         for x, y in enumerate(bits):
             if bits[x] == "1":
-                print self.fault_flags[x],
+                self.parsed_fault_flags.append(self.fault_flags[x])
+        self.parsed_fault_flags = "|".join(self.parsed_fault_flags)
+
+    def parse_probe_vars(self, probe_string):
+        self.flags = re.search("flags=(0x.+)", probe_string).groups()[0]
+        self.vm_area_struct = re.search("vm_area_struct=([^\s]+)", probe_string).groups()[0]
+        self.address = re.search("address=([^\s]+)", probe_string).groups()[0]
+
+    def print_fault(self):
+        print "PID: %s" % (self.pid)
+        print "vm_area_struct: %s" % (self.vm_area_struct)
+        print "Address: %s" % (self.address)
+        print "Flags: %s (%s)" % (self.flags, self.parsed_fault_flags)
         print
 
     def trace(self):
@@ -47,9 +56,11 @@ class MMFault(object):
         self.kp.enable_tracing()
         for line in self.kp.get_trace_snapshot():
             if line[0] != "#" and "handle_mm_fault" in line:
-                vm_area_struct, address, flags = self.get_probe_vars(line)
-                print line
-                self.parse_fault_flags(flags)
+                split_line = filter(None, line.replace(":", "").split(" "))
+                self.pid = split_line[0]
+                self.parse_probe_vars(line)
+                self.parse_fault_flags()
+                self.print_fault()
         self.kp.disable_tracing()
 
 def main():
