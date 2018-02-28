@@ -17,10 +17,12 @@ Script for interacting with ftrace uprobes
 
 class UprobeTracer(object):
 
-    def __init__(self, uprobe_event, pid=False, period=0.5, stacktrace=False):
-        self.ft = uprobe.Uprobe()
+    def __init__(self, uprobe_event, pid_filter=False, period=0.5, stacktrace=False):
+        self.pid_filter = pid_filter
+        if pid_filter:
+            self.pid_filter = "common_pid == %s" % (self.pid_filter)
+        self.ft = uprobe.Uprobe(uprobe_filter=self.pid_filter)
         self.uprobe_event = uprobe_event
-        self.pid = pid
         self.period = period
         self.stacktrace = stacktrace
 
@@ -37,14 +39,12 @@ class UprobeTracer(object):
 
     def trace_probe(self):
         try:
-            if self.pid:
-                self.pid = "common_pid == %s" % (self.pid)
             if self.stacktrace:
                 self.ft.set_format_option("userstacktrace", "1")
                 self.ft.set_format_option("display-graph", "1")
                 self.ft.set_format_option("sym-userobj", "1")
             self.ft.set_event(self.uprobe_event)
-            self.ft.enable_tracing(uprobe_filter=self.pid)
+            self.ft.enable_tracing()
         except IOError:
             self.exit_with_error("Invalid uprobe '%s'" % (self.uprobe_event))
         sleep(float(self.period))
@@ -66,7 +66,7 @@ def main():
     if int(release()[0]) < 4:
         print "Kernel version must be 4.0 or greater!"
         exit(1)
-    up = UprobeTracer(args.uprobe, pid=args.pid, period=args.sample, stacktrace=args.stacktrace)
+    up = UprobeTracer(args.uprobe, pid_filter=args.pid, period=args.sample, stacktrace=args.stacktrace)
     up.trace_probe()
 
 if __name__ == '__main__':

@@ -2,6 +2,10 @@ from ftrace import Ftrace
 
 class Kprobe(Ftrace):
 
+    """
+      TODO
+        - Make into a generic probe class for uprobe and kprobe
+    """
     def __init__(self, kprobe_filter=None):
         Ftrace.__init__(self)
         self.events_dir = self.tracing_dir + "/events/kprobes/"
