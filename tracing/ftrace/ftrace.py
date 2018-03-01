@@ -9,6 +9,7 @@ class Ftrace(object):
         self.current_tracer_file = self.tracing_dir + "/current_tracer"
         self.trace_file = self.tracing_dir + "/trace"
         self.trace_option_dir = self.tracing_dir + "/options"
+        self.trace_pid_file = self.tracing_dir + "/set_ftrace_pid"
         self.snapshot_file = self.tracing_dir + "/snapshot"
 
         self.CONFIG_FTRACE = "CONFIG_FTRACE"
@@ -28,6 +29,13 @@ class Ftrace(object):
     def exit_with_error(self, message):
         print message
         exit(1)
+
+    def generic_disable_tracing(self):
+        self.generic_filter_pid("")
+        self.set_value("nop", self.current_tracer_file)
+
+    def generic_filter_pid(self, pid):
+        self.set_value(pid, self.trace_pid_file)
 
     def pre_flight_checks(self):
         self.check_ftrace_option(self.CONFIG_FTRACE)

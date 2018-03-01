@@ -2,11 +2,11 @@ from ftrace import Ftrace
 
 class FunctionGraph(Ftrace):
 
-    def __init__():
+    def __init__(self):
         Ftrace.__init__(self)
 
-    def disable_tracing():
+    def disable_tracing(self):
         pass
 
-    def enable_tracing():
+    def enable_tracing(self):
         pass
