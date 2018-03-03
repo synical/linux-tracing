@@ -58,12 +58,11 @@ class MMFault(object):
         self.kp.set_event(self.probe)
         self.kp.enable_tracing()
         for line in self.kp.get_trace_snapshot():
-            if line[0] != "#" and "handle_mm_fault" in line:
-                split_line = filter(None, line.replace(":", "").split(" "))
-                self.fault_pid = split_line[0]
-                self.parse_probe_vars(line)
-                self.parse_fault_flags()
-                self.print_fault()
+            split_line = filter(None, line.replace(":", "").split(" "))
+            self.fault_pid = split_line[0]
+            self.parse_probe_vars(line)
+            self.parse_fault_flags()
+            self.print_fault()
         self.kp.disable_tracing()
 
 def parse_args():

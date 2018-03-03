@@ -61,7 +61,7 @@ class Ftrace(object):
         self.set_value("1", self.snapshot_file)
         self.set_value("", self.trace_file)
         with open(self.snapshot_file) as f:
-            data = f.readlines()
+            data = [l for l in f.readlines() if l[0] != "#"]
         return data
 
     def set_format_option(self, option, value):

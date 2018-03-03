@@ -12,7 +12,8 @@ class FuncTrace(object):
         if self.pid_filter:
             self.ft.generic_filter_pid(self.pid_filter)
         self.ft.enable_tracing()
-        print self.ft.get_trace_snapshot()
+        for line in self.ft.get_trace_snapshot():
+            print line,
         self.ft.disable_tracing()
 
 def parse_args():

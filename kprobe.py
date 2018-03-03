@@ -47,8 +47,7 @@ class KprobeTracer(object):
             self.exit_with_error("Invalid kprobe '%s'" % (self.kprobe_event))
         sleep(float(self.period))
         for line in self.ft.get_trace_snapshot():
-            if line[0] != "#":
-                print line,
+            print line,
         self.cleanup()
 
 def parse_args():

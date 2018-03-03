@@ -49,8 +49,7 @@ class UprobeTracer(object):
             self.exit_with_error("Invalid uprobe '%s'" % (self.uprobe_event))
         sleep(float(self.period))
         for line in self.ft.get_trace_snapshot():
-            if line[0] != "#":
-                print line,
+            print line,
         self.cleanup()
 
 def parse_args():
