@@ -13,7 +13,10 @@ class Uprobe(Ftrace):
         self.trace_enable_file = self.events_dir + "/enable"
         self.uprobe_filter = uprobe_filter
 
-        self.CONFIG_UPROBE_EVENTS = "CONFIG_UPROBE_EVENTS"
+        self.required_config_options = [
+            "CONFIG_UPROBE_EVENTS"
+        ]
+        self.pre_flight_checks()
 
     def disable_tracing(self, message=False):
         self.set_value("0", self.trace_enable_file)
@@ -28,5 +31,4 @@ class Uprobe(Ftrace):
         self.set_value("1", self.trace_enable_file)
 
     def set_event(self, uprobe_event):
-        self.check_ftrace_option(self.CONFIG_UPROBE_EVENTS)
         self.set_value(uprobe_event, self.events_file)

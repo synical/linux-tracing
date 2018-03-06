@@ -17,16 +17,18 @@ class Ftrace(object):
         self.trace_pid_file = self.tracing_dir + "/set_ftrace_pid"
         self.snapshot_file = self.tracing_dir + "/snapshot"
 
-        self.CONFIG_FTRACE = "CONFIG_FTRACE"
-        self.CONFIG_TRACER_SNAPSHOT = "CONFIG_TRACER_SNAPSHOT"
-
+        self.required_config_options = [
+            "CONFIG_FTRACE",
+            "CONFIG_TRACER_SNAPSHOT"
+        ]
         self.pre_flight_checks()
 
-    def check_ftrace_option(self, option):
+    def check_ftrace_options(self):
         with open("/boot/config-%s" % (release())) as f:
-            if "%s=y" % (option) in f.read():
-                return True
-            self.exit_with_error("Kernel not compiled with %s!" % (option))
+            config = [l.strip() for l in f.readlines()]
+            for option in self.required_config_options:
+                if "%s=y" % (option) not in config:
+                    self.exit_with_error("Kernel not compiled with %s!" % (option))
             return False
 
     def exit_with_error(self, message):
@@ -41,7 +43,7 @@ class Ftrace(object):
         self.set_value(pid, self.trace_pid_file)
 
     def pre_flight_checks(self):
-        self.check_ftrace_option(self.CONFIG_FTRACE)
+        self.check_ftrace_options()
         if not os.getuid() == 0:
             self.exit_with_error("This program needs to be executed as root")
         if not os.path.isdir(self.tracing_dir):
@@ -59,7 +61,6 @@ class Ftrace(object):
         return setting
 
     def get_trace_snapshot(self):
-        self.check_ftrace_option(self.CONFIG_TRACER_SNAPSHOT)
         self.set_value("0", self.snapshot_file)
         self.set_value("1", self.snapshot_file)
         self.set_value("", self.trace_file)

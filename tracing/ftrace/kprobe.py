@@ -13,7 +13,10 @@ class Kprobe(Ftrace):
         self.trace_enable_file = self.events_dir + "/enable"
         self.kprobe_filter = kprobe_filter
 
-        self.CONFIG_KPROBE_EVENTS = "CONFIG_KPROBE_EVENTS"
+        self.required_config_options = [
+            "CONFIG_KPROBE_EVENTS"
+        ]
+        self.pre_flight_checks()
 
     def disable_tracing(self, message=False):
         self.set_value("0", self.trace_enable_file)
@@ -28,5 +31,4 @@ class Kprobe(Ftrace):
         self.set_value("1", self.trace_enable_file)
 
     def set_event(self, kprobe_event):
-        self.check_ftrace_option(self.CONFIG_KPROBE_EVENTS)
         self.set_value(kprobe_event, self.events_file)
