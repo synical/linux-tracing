@@ -2,6 +2,11 @@ import os
 
 from platform import release
 
+"""
+  TODO
+    - Do config checks per module
+"""
+
 class Ftrace(object):
 
     def __init__(self):
