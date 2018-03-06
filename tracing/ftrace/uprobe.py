@@ -13,6 +13,8 @@ class Uprobe(Ftrace):
         self.trace_enable_file = self.events_dir + "/enable"
         self.uprobe_filter = uprobe_filter
 
+        self.CONFIG_UPROBE_EVENTS = "CONFIG_UPROBE_EVENTS"
+
     def disable_tracing(self, message=False):
         self.set_value("0", self.trace_enable_file)
         self.set_value("", self.events_file)

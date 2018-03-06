@@ -8,6 +8,8 @@ class Function(Ftrace):
         self.function_filter_file = self.tracing_dir + "set_ftrace_filter"
         self.tracer_name = "function"
 
+        self.CONFIG_DYNAMIC_FTRACE = "CONFIG_DYNAMIC_FTRACE"
+
     def disable_tracing(self):
         self.generic_disable_tracing()
 

@@ -19,8 +19,6 @@ class Ftrace(object):
 
         self.CONFIG_FTRACE = "CONFIG_FTRACE"
         self.CONFIG_TRACER_SNAPSHOT = "CONFIG_TRACER_SNAPSHOT"
-        self.CONFIG_UPROBE_EVENTS = "CONFIG_UPROBE_EVENTS"
-        self.CONFIG_KPROBE_EVENTS = "CONFIG_KPROBE_EVENTS"
 
         self.pre_flight_checks()
 
