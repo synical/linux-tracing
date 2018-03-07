@@ -4,7 +4,6 @@ from tracing.ftrace import function_graph,function
 
 """
   TODO
-    - Filter on function
     - Latency of function
     - Stack traces of function
 """
@@ -13,14 +12,12 @@ class FuncTrace(object):
 
     def __init__(self, pid_filter=False, function_filter=False):
         self.ft = function.Function()
-        self.pid_filter = pid_filter
-        self.function_filter = function_filter
+        if pid_filter:
+            self.ft.generic_filter_pid(pid_filter)
+        if function_filter:
+            self.ft.filter_function_name(function_filter)
 
     def trace_functions(self):
-        if self.pid_filter:
-            self.ft.generic_filter_pid(self.pid_filter)
-        if self.function_filter:
-            self.ft.filter_function_name(self.function_filter)
         self.ft.enable_tracing()
         for line in self.ft.get_trace_snapshot():
             print line,

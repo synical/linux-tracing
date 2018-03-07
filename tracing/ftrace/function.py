@@ -18,13 +18,13 @@ class Function(Ftrace):
 
     def filter_function_name(self, function):
         if self.check_function_available(function):
-            self.set_value(self.function_filter_file, function)
+            self.set_value(function, self.function_filter_file)
         else:
             self.disable_tracing()
             self.exit_with_error("Function %s not available to trace!" % (function))
 
     def check_function_available(self, function):
         with open(self.function_available_file, "r") as f:
-            if function in f.readlines():
+            if function in f.read():
                 return True
         return False
