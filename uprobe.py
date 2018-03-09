@@ -29,7 +29,6 @@ class UprobeTracer(object):
     def cleanup(self):
         if self.stacktrace:
             self.ft.set_format_option("userstacktrace", "0")
-            self.ft.set_format_option("display-graph", "0")
             self.ft.set_format_option("sym-userobj", "0")
         self.ft.disable_tracing()
 
@@ -41,7 +40,6 @@ class UprobeTracer(object):
         try:
             if self.stacktrace:
                 self.ft.set_format_option("userstacktrace", "1")
-                self.ft.set_format_option("display-graph", "1")
                 self.ft.set_format_option("sym-userobj", "1")
             self.ft.set_event(self.uprobe_event)
             self.ft.enable_tracing()

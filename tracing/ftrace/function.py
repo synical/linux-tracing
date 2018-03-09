@@ -11,6 +11,7 @@ class Function(Ftrace):
         self.CONFIG_DYNAMIC_FTRACE = "CONFIG_DYNAMIC_FTRACE"
 
     def disable_tracing(self):
+        self.set_value("", self.function_filter_file)
         self.generic_disable_tracing()
 
     def enable_tracing(self):

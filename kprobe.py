@@ -29,7 +29,6 @@ class KprobeTracer(object):
     def cleanup(self):
         if self.stacktrace:
             self.ft.set_format_option("stacktrace", "0")
-            self.ft.set_format_option("display-graph", "0")
         self.ft.disable_tracing()
 
     def exit_with_error(self, message):
@@ -40,7 +39,6 @@ class KprobeTracer(object):
         try:
             if self.stacktrace:
                 self.ft.set_format_option("stacktrace", "1")
-                self.ft.set_format_option("display-graph", "1")
             self.ft.set_event(self.kprobe_event)
             self.ft.enable_tracing()
         except IOError:
