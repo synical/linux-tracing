@@ -18,6 +18,7 @@ class FuncTrace(object):
         if pid_filter:
             self.ft.generic_filter_pid(pid_filter)
         if function_filter:
+            self.function_filter = function_filter
             self.ft.filter_function_name(function_filter)
         if stacktrace:
             self.ft.set_format_option("func_stack_trace", "1")
@@ -30,6 +31,7 @@ class FuncTrace(object):
     def count_callers(self):
         callers = [l.strip().split(" ")[-1].strip("<-") for l in self.ft.get_trace_snapshot()]
         caller_counts = Counter(callers).most_common()
+        print "Top 10 callers of %s:\n" % (self.function_filter)
         for x in caller_counts[:10]:
             print "%s: %s" % (x[0], x[1])
 
