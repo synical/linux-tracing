@@ -13,6 +13,7 @@ class FuncTrace(object):
 
     def __init__(self, pid_filter=False, function_filter=False, stacktrace=False, count=False):
         self.ft = function.Function()
+        self.fg = function_graph.FunctionGraph()
         self.stacktrace = stacktrace
         self.count = count
         if pid_filter:
