@@ -26,6 +26,7 @@ class Function(Ftrace):
 
     def check_function_available(self, function):
         with open(self.function_available_file, "r") as f:
-            if function in f.read():
+            available = [l for l in f.readlines() if l.split(" ")[0].strip() == function]
+            if available:
                 return True
         return False
