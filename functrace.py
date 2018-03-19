@@ -36,6 +36,7 @@ class FuncTrace(object):
         self.ft.set_format_option("funcgraph-cpu", "1")
         self.ft.disable_tracing()
         self.fg.disable_tracing()
+        exit(0)
 
     def count_callers(self):
         self.ft.enable_tracing()
@@ -64,8 +65,11 @@ class FuncTrace(object):
         else:
             trace_function = self.raw_function_trace
         while True:
-            sleep(self.interval)
-            trace_function()
+            try:
+                sleep(self.interval)
+                trace_function()
+            except KeyboardInterrupt:
+                self.cleanup()
         self.cleanup()
 
 def parse_args():
