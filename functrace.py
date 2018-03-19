@@ -1,18 +1,18 @@
 import argparse
 
 from collections import Counter
+from time import sleep
 
 from tracing.ftrace import function_graph,function
 
 """
   TODO
     - Latency histogram
-    - Sampling period
 """
 
 class FuncTrace(object):
 
-    def __init__(self, pid_filter=False, function_filter=False, stacktrace=False, count=False, latency=False):
+    def __init__(self, pid_filter=False, function_filter=False, stacktrace=False, count=False, latency=False, interval=1):
         self.ft = function.Function()
         self.fg = function_graph.FunctionGraph()
         self.pid_filter = pid_filter
@@ -20,6 +20,8 @@ class FuncTrace(object):
         self.stacktrace = stacktrace
         self.count = count
         self.latency = latency
+        self.interval = interval
+
         if function_filter:
             self.ft.filter_function_name(function_filter)
         if pid_filter:
@@ -36,11 +38,17 @@ class FuncTrace(object):
         self.fg.disable_tracing()
 
     def count_callers(self):
+        self.ft.enable_tracing()
         callers = [l.strip().split(" ")[-1].strip("<-") for l in self.ft.get_trace_snapshot()]
         caller_counts = Counter(callers).most_common()
         print "Top 10 callers of %s:\n" % (self.function_filter)
         for x in caller_counts[:10]:
             print "%s: %s" % (x[0], x[1])
+
+    def raw_function_trace(self):
+        self.ft.enable_tracing()
+        for line in self.ft.get_trace_snapshot():
+            print line,
 
     def trace_latency(self):
         self.fg.enable_tracing()
@@ -50,14 +58,14 @@ class FuncTrace(object):
 
     def trace_functions(self):
         if self.latency:
-            self.trace_latency()
+            trace_function = self.trace_latency
+        elif self.count:
+            trace_function = self.count_callers
         else:
-            self.ft.enable_tracing()
-            if self.count:
-                self.count_callers()
-            else:
-                for line in self.ft.get_trace_snapshot():
-                    print line,
+            trace_function = self.raw_function_trace
+        while True:
+            sleep(self.interval)
+            trace_function()
         self.cleanup()
 
 def parse_args():
@@ -67,6 +75,7 @@ def parse_args():
     parser.add_argument("-t", "--trace", action="store_true", dest="stacktrace", help="Include stack traces")
     parser.add_argument("-c", "--count", action="store_true", dest="count", help="Output a count of the top callers")
     parser.add_argument("-l", "--latency", action="store_true", dest="latency", help="Get latency info on function passed with -f/--function")
+    parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, help="Sampling interval")
     return parser.parse_args()
 
 def main():
@@ -77,7 +86,7 @@ def main():
     if args.latency and not args.function:
         print "Cannot use latency arg without function arg!"
         exit(1)
-    ft = FuncTrace(pid_filter=args.pid, function_filter=args.function, stacktrace=args.stacktrace, count=args.count, latency=args.latency)
+    ft = FuncTrace(pid_filter=args.pid, function_filter=args.function, stacktrace=args.stacktrace, count=args.count, latency=args.latency, interval=args.interval)
     ft.trace_functions()
 
 if __name__ == "__main__":
