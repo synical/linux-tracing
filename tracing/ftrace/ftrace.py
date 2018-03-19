@@ -50,10 +50,7 @@ class Ftrace(object):
             self.exit_with_error(("Tracing directory %s not found. "
             "Is debugfs mounted?"
             % (self.tracing_dir)))
-        if self.get_setting(self.current_tracer_file) != "nop":
-            self.exit_with_error(("Tracer currently set. "
-                "Please echo nop > %s before running this program"
-                % (self.current_tracer_file)))
+        self.set_value("nop", self.current_tracer_file)
 
     def get_setting(self, path):
         with open(path) as f:
