@@ -23,7 +23,6 @@ class IoLatency(object):
         self.ft = block.Block()
         self.issued = []
         self.completed = []
-        self.io_stats = {}
         self.io_times = []
         if bio:
             self.io_start = "block_bio_queue"
@@ -38,7 +37,6 @@ class IoLatency(object):
     def clear_io_stats(self):
         self.issued = []
         self.completed = []
-        self.io_stats = {}
         self.io_times = []
 
     def disable_and_exit(self, message=False):
@@ -68,9 +66,9 @@ class IoLatency(object):
 
     def print_io_stats(self):
             self.get_rq_times()
-            self.io_stats = utils.compute_distribution(self.io_times)
+            io_stats = utils.compute_distribution(self.io_times)
             print "\nIO Latency Statistics (ms):\n"
-            for k, v in self.io_stats.iteritems():
+            for k, v in io_stats.iteritems():
                 print "%s\t\t%0.2f" % (k, v)
 
     def trace_io(self, device, operation=False, interval=10):
