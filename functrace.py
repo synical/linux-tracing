@@ -1,8 +1,10 @@
 import argparse
+import re
 
 from collections import Counter
 from time import sleep
 
+from tracing import utils
 from tracing.ftrace import function_graph,function
 
 """
@@ -46,6 +48,12 @@ class FuncTrace(object):
         for x in caller_counts[:10]:
             print "%s: %s" % (x[0], x[1])
 
+    def parse_latencies(self):
+        function_latencies = filter(None, [l.split("|")[0].strip() for l in self.fg.get_trace_snapshot() if self.function_filter in l])
+        function_latencies = [float(re.findall(r"[0-9]+\.[0-9]+", f)[0]) for f in function_latencies]
+        function_latencies.sort(reverse=True)
+        return function_latencies
+
     def raw_function_trace(self):
         self.ft.enable_tracing()
         for line in self.ft.get_trace_snapshot():
@@ -53,9 +61,11 @@ class FuncTrace(object):
 
     def trace_latency(self):
         self.fg.enable_tracing()
-        function_latencies = filter(None, [l.split("|")[0].strip() for l in self.fg.get_trace_snapshot() if self.function_filter in l])
-        function_latencies.sort(reverse=True)
-        print "Top 10 slowest '%s' calls\n\n%s" % (self.function_filter, "\n".join(function_latencies[:10]))
+        function_latencies = self.parse_latencies()
+        self.latency_distribution = []
+        print "\nLatency distribution of '%s'\n" % (self.function_filter)
+        for k, v in utils.compute_distribution(function_latencies).iteritems():
+            print "%s\t\t%0.2f" % (k, v)
 
     def trace_functions(self):
         if self.latency:

@@ -2,8 +2,9 @@
 
 import argparse
 
-from numpy import percentile
 from time import sleep
+
+from tracing import utils
 from tracing.ftrace import block
 
 """
@@ -40,17 +41,6 @@ class IoLatency(object):
         self.io_stats = {}
         self.io_times = []
 
-    def compute_io_stats(self):
-        try:
-            self.io_stats["min"] = min(self.io_times)
-            self.io_stats["p50"] = percentile(self.io_times, 50)
-            self.io_stats["p99"] = percentile(self.io_times, 99)
-            self.io_stats["p999"] = percentile(self.io_times, 99.9)
-            self.io_stats["max"] = max(self.io_times)
-            self.io_stats["count"] = len(self.io_times)
-        except ValueError:
-            return
-
     def disable_and_exit(self, message=False):
         self.ft.disable_tracing()
         if message:
@@ -78,7 +68,7 @@ class IoLatency(object):
 
     def print_io_stats(self):
             self.get_rq_times()
-            self.compute_io_stats()
+            self.io_stats = utils.compute_distribution(self.io_times)
             print "\nIO Latency Statistics (ms):\n"
             for k, v in self.io_stats.iteritems():
                 print "%s\t\t%0.2f" % (k, v)
