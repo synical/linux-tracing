@@ -13,12 +13,13 @@ def compute_distribution(stats):
     except ValueError:
         return {}
 
-def compute_histogram(stats):
+def compute_histogram(stats, unit="ms"):
     counts = {x: stats.count(x) for x in set(stats)}
     lowest = min(stats)
     highest = max(stats)
     
     i=0
+    print "Value(%s)\t\tCount\t\tDistribution" % (unit)
     while True:
         if i == 0:
             print "0\t->\t1\t0"
