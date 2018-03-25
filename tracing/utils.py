@@ -14,13 +14,19 @@ def compute_distribution(stats):
         return {}
 
 def compute_histogram(stats, unit="ms"):
-    counts = {x: stats.count(x) for x in set(stats)}
-    stats_len = len(stats)
-    lowest = min(stats)
-    highest = max(stats)
-    bar_length = float(10)
+    print "\nValue(%s)\t\tCount\t\tDistribution" % (unit)
+    try:
+        stats = [int(x) for x in stats]
+        counts = {x: stats.count(x) for x in set(stats) if x > 0}
+        if not len(counts):
+            return
+        stats_len = len(stats)
+        lowest = min(stats)
+        highest = max(stats)
+        bar_length = float(10)
+    except ValueError:
+        return
     
-    print "Value(%s)\t\tCount\t\tDistribution" % (unit)
     if lowest == 0:
         print "0\t->\t1\t0"
         i = 1
