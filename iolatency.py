@@ -9,18 +9,14 @@ from tracing.ftrace import block
 
 """
 TODO
-    * Add histogram output support
     * Print results on Ctrl-C
 """
 
-# https://elixir.free-electrons.com/linux/v3.14/source/include/trace/events/block.h
-# http://elixir.free-electrons.com/linux/v3.14/source/include/linux/blk_types.h
-# http://elixir.free-electrons.com/linux/v3.14/source/kernel/trace/blktrace.c#L1803
-
 class IoLatency(object):
 
-    def __init__(self, queue=False, bio=False):
+    def __init__(self, queue=False, bio=False, histogram=False):
         self.ft = block.Block()
+        self.histogram = histogram
         self.issued = []
         self.completed = []
         self.io_times = []
@@ -66,10 +62,12 @@ class IoLatency(object):
 
     def print_io_stats(self):
             self.get_rq_times()
-            io_stats = utils.compute_distribution(self.io_times)
-            print "\nIO Latency Statistics (ms):\n"
-            for k, v in io_stats.iteritems():
-                print "%s\t\t%0.2f" % (k, v)
+            if self.histogram:
+                utils.compute_histogram(self.io_times)
+            else:
+                print "\nIO Latency Statistics (ms):\n"
+                for k, v in utils.compute_distribution(self.io_times).iteritems():
+                    print "%s\t\t%0.2f" % (k, v)
 
     def trace_io(self, device, operation=False, interval=10):
         self.ft.enable_tracing(events=[self.io_start, self.io_end])
@@ -103,16 +101,17 @@ class IoLatency(object):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--device", action="store", dest="device", required=True, help="<MAJ,MIN>")
-    parser.add_argument("-o", "--operation", action="store", dest="operation", required=False, help="<W,R>")
-    parser.add_argument("-q", "--queue", action="store_true", dest="queue", required=False, help="Use block_rq_insert event as start of I/O")
-    parser.add_argument("-b", "--bio", action="store_true", dest="bio", required=False, help="Trace bio operations (useful for device mappers)")
-    parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, required=False, help="Collection interval")
+    parser.add_argument("-o", "--operation", action="store", dest="operation", help="<W,R>")
+    parser.add_argument("-q", "--queue", action="store_true", dest="queue", help="Use block_rq_insert event as start of I/O")
+    parser.add_argument("-b", "--bio", action="store_true", dest="bio", help="Trace bio operations (useful for device mappers)")
+    parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, help="Collection interval")
+    parser.add_argument("--histogram", action="store_true", dest="histogram", default=False, help="Histogram output")
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
-    io = IoLatency(queue=args.queue, bio=args.bio)
+    io = IoLatency(queue=args.queue, bio=args.bio, histogram=args.histogram)
     io.trace_io(args.device, operation=args.operation, interval=args.interval)
 
 if __name__ == '__main__':
