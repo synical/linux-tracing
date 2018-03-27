@@ -13,7 +13,6 @@ class Block(Ftrace):
             self.exit_with_error(message)
 
     def enable_tracing(self, events=None):
-        self.set_format_option("irq-info", "0")
         if events:
             for e in events:
                 self.set_value("1", "%s/%s/enable" % (self.events_dir, e))

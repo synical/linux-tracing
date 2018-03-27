@@ -10,6 +10,7 @@ from tracing.ftrace import block
 """
 TODO
     * Print results on Ctrl-C
+    * Fix bug with double spaced comm (context-info)
 """
 
 class IoLatency(object):
@@ -37,6 +38,7 @@ class IoLatency(object):
 
     def disable_and_exit(self, message=False):
         self.ft.disable_tracing()
+        self.ft.set_format_option("irq-info", "1")
         if message:
             print message
             exit(1)
@@ -70,6 +72,7 @@ class IoLatency(object):
                     print "%s\t\t%0.2f" % (k, v)
 
     def trace_io(self, device, operation=False, interval=10):
+        self.ft.set_format_option("irq-info", "0")
         self.ft.enable_tracing(events=[self.io_start, self.io_end])
         try:
             print "Collecting trace data. Ctrl-C to stop."
