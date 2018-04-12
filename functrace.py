@@ -43,9 +43,9 @@ class FuncTrace(object):
     def count_callers(self):
         self.ft.enable_tracing()
         callers = [l.strip().split(" ")[-1].strip("<-") for l in self.ft.get_trace_snapshot()]
-        caller_counts = Counter(callers).most_common()
+        caller_counts = Counter(callers).most_common(10)
         print "Top 10 callers of %s:\n" % (self.function_filter)
-        for x in caller_counts[:10]:
+        for x in caller_counts:
             print "%s: %s" % (x[0], x[1])
 
     def parse_latencies(self):
