@@ -36,7 +36,6 @@ class FunctionLatency(object):
         return function_latencies
 
     def trace_latency(self):
-        self.fg.enable_tracing()
         function_latencies = self.parse_latencies()
         self.latency_distribution = []
         print "\nLatency distribution of '%s'\n" % (self.function_filter)
@@ -44,6 +43,7 @@ class FunctionLatency(object):
             print "%s\t\t%0.2f" % (k, v)
 
     def trace(self):
+        self.fg.enable_tracing()
         while True:
             try:
                 sleep(self.interval)
@@ -55,7 +55,7 @@ class FunctionLatency(object):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--pid", action="store", dest="pid", required=False, default=False, help="Pid to filter")
-    parser.add_argument("-f", "--function", action="store", dest="function", required=False, default=False, help="Function to filter")
+    parser.add_argument("-f", "--function", action="store", dest="function", required=True, default=False, help="Function to filter")
     parser.add_argument("-i", "--interval", action="store", dest="interval", default=5, help="Sampling interval")
     return parser.parse_args()
 
