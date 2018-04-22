@@ -9,14 +9,17 @@ from tracing.ftrace import block
 
 """
 TODO
-    * Print results on Ctrl-C
+    * Optimise (cannot handle high I/O rate)
 """
 
 class IoLatency(object):
 
-    def __init__(self, queue=False, bio=False, histogram=False):
+    def __init__(self, device=False, queue=False, bio=False, operation=False, interval=1, histogram=False):
         self.ft = block.Block()
+        self.device = device
         self.histogram = histogram
+        self.operation = operation
+        self.interval = interval
         self.issued = []
         self.completed = []
         self.io_times = []
@@ -34,6 +37,23 @@ class IoLatency(object):
         self.issued = []
         self.completed = []
         self.io_times = []
+
+    def compute_io_stats(self):
+        for line in self.ft.get_trace_snapshot():
+            if self.io_start in line and self.device in line:
+                split_line = self.parse_line(line)
+                if not self.operation:
+                    self.issued.append(split_line)
+                    continue
+                if self.operation in split_line[5]:
+                    self.issued.append(split_line)
+            if self.io_end in line and self.device in line:
+                split_line = self.parse_line(line)
+                if not self.operation:
+                    self.completed.append(split_line)
+                    continue
+                if self.operation in split_line[5]:
+                    self.completed.append(split_line)
 
     def disable_and_exit(self, message=False):
         self.ft.disable_tracing()
@@ -73,33 +93,19 @@ class IoLatency(object):
                 for k, v in utils.compute_distribution(self.io_times).iteritems():
                     print "%s\t\t%0.2f" % (k, v)
 
-    def trace_io(self, device, operation=False, interval=10):
+    def trace(self):
         self.ft.set_format_option("irq-info", "0")
         self.ft.enable_tracing(events=[self.io_start, self.io_end])
         try:
             print "Collecting trace data. Ctrl-C to stop."
             while True:
-                sleep(float(interval))
-
-                for line in self.ft.get_trace_snapshot():
-                    if self.io_start in line and device in line:
-                        split_line = self.parse_line(line)
-                        if not operation:
-                            self.issued.append(split_line)
-                            continue
-                        if operation in split_line[5]:
-                            self.issued.append(split_line)
-                    if self.io_end in line and device in line:
-                        split_line = self.parse_line(line)
-                        if not operation:
-                            self.completed.append(split_line)
-                            continue
-                        if operation in split_line[5]:
-                            self.completed.append(split_line)
-
+                sleep(float(self.interval))
+                self.compute_io_stats()
                 self.print_io_stats()
                 self.clear_io_stats()
         except KeyboardInterrupt:
+            self.compute_io_stats()
+            self.print_io_stats()
             self.disable_and_exit()
 
 def parse_args():
@@ -115,8 +121,8 @@ def parse_args():
 
 def main():
     args = parse_args()
-    io = IoLatency(queue=args.queue, bio=args.bio, histogram=args.histogram)
-    io.trace_io(args.device, operation=args.operation, interval=args.interval)
+    io = IoLatency(device=args.device, queue=args.queue, bio=args.bio, operation=args.operation, interval=args.interval, histogram=args.histogram)
+    io.trace()
 
 if __name__ == '__main__':
     main()

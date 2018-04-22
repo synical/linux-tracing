@@ -1,4 +1,4 @@
-from numpy import percentile
+from numpy import percentile,mean
 
 def compute_distribution(stats):
     try:
@@ -9,6 +9,7 @@ def compute_distribution(stats):
         distribution["p999"] = percentile(stats, 99.9)
         distribution["max"] = max(stats)
         distribution["count"] = len(stats)
+        distribution["mean"] = mean(stats)
         return distribution
     except ValueError:
         return {}
