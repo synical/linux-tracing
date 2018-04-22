@@ -10,7 +10,6 @@ from tracing.ftrace import block
 """
 TODO
     * Print results on Ctrl-C
-    * Fix bug with double spaced comm (context-info)
 """
 
 class IoLatency(object):
@@ -46,21 +45,24 @@ class IoLatency(object):
 
     def get_rq_times(self):
         for i in self.issued:
-            i_dev = i[4]
-            i_offset = i[-4]
-            i_time = float(i[2])
+            i_dev = i[2]
+            i_offset = i[6]
+            i_time = float(i[0])
             for c in self.completed:
-                c_dev = c[4]
-                c_offset = c[-4]
-                try:
-                    c_time = float(c[2])
-                except ValueError:
-                    print "Problem converting to float. Row was %s" % (c)
-                    self.disable_and_exit()
+                c_dev = c[2]
+                c_offset = c[5]
+                c_time = float(c[0])
                 if i_offset == c_offset and i_dev == c_dev:
                     self.io_times.append((c_time - i_time) * 1000)
                     self.completed.remove(c)
                     break
+
+    def parse_line(self, line):
+        line = filter(None, line.replace(":", "").split(" "))
+        for i, x in enumerate(line):
+            if x.startswith("[") and x.endswith("]"):
+                return line[i+1:-1]
+        return line
 
     def print_io_stats(self):
             self.get_rq_times()
@@ -81,15 +83,14 @@ class IoLatency(object):
 
                 for line in self.ft.get_trace_snapshot():
                     if self.io_start in line and device in line:
-                        split_line = filter(None, line.replace(":", "").split(" "))
-                        split_line[0].replace(" ", "")
+                        split_line = self.parse_line(line)
                         if not operation:
                             self.issued.append(split_line)
                             continue
                         if operation in split_line[5]:
                             self.issued.append(split_line)
                     if self.io_end in line and device in line:
-                        split_line = filter(None, line.replace(":", "").split(" "))
+                        split_line = self.parse_line(line)
                         if not operation:
                             self.completed.append(split_line)
                             continue
