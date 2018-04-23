@@ -10,10 +10,13 @@ from tracing.ftrace import block
 
 class IoRaw(object):
 
-    def __init__(self, device=False, interval=1):
+    def __init__(self, device=False, pid_filter=False, interval=1):
         self.bt = block.Block()
         self.device = device
         self.interval = interval
+
+        if pid_filter:
+            self.bt.set_filter("common_pid == %s" % (pid_filter))
 
     def disable_and_exit(self):
         self.bt.disable_tracing()
@@ -38,12 +41,13 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--device", action="store", dest="device", required=True, help="<MAJ,MIN>")
     parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, help="Collection interval")
+    parser.add_argument("-p", "--pid", action="store", dest="pid", default=False, help="Pid to filter")
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
-    io = IoRaw(device=args.device, interval=args.interval)
+    io = IoRaw(device=args.device, pid_filter=args.pid, interval=args.interval)
     io.trace()
 
 if __name__ == '__main__':

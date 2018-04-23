@@ -5,6 +5,7 @@ class Block(Ftrace):
     def __init__(self):
         Ftrace.__init__(self)
         self.events_dir = self.tracing_dir + "/events/block"
+        self.filter_file = self.tracing_dir + "/events/block/filter"
         self.trace_enable_file = self.events_dir + "/enable"
 
     def disable_tracing(self, message=False):
@@ -19,3 +20,5 @@ class Block(Ftrace):
         else:
             self.set_value("1", self.trace_enable_file)
 
+    def set_filter(self, block_filter):
+        self.set_value(block_filter, self.filter_file)

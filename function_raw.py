@@ -43,7 +43,7 @@ class FunctionRaw(object):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--pid", action="store", dest="pid", required=False, default=False, help="Pid to filter")
-    parser.add_argument("-f", "--function", action="store", dest="function", required=True, default=False, help="Function to filter")
+    parser.add_argument("-f", "--function", action="store", dest="function", required=False, default=False, help="Function to filter")
     parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, help="Sampling interval")
     parser.add_argument("-s", "--stacktrace", action="store_true", dest="stacktrace", default=False, help="Capture stacktraces")
     return parser.parse_args()
