@@ -90,8 +90,7 @@ class IoLatency(object):
                 utils.compute_histogram(self.io_times)
             else:
                 print "\nIO Latency Statistics (ms):\n"
-                for k, v in utils.compute_distribution(self.io_times).iteritems():
-                    print "%s\t\t%0.2f" % (k, v)
+                utils.print_distribution(self.io_times)
 
     def trace(self):
         self.ft.set_format_option("irq-info", "0")

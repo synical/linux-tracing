@@ -1,6 +1,6 @@
 from numpy import percentile,mean
 
-def compute_distribution(stats):
+def print_distribution(stats):
     try:
         distribution = {}
         distribution["min"] = min(stats)
@@ -10,9 +10,11 @@ def compute_distribution(stats):
         distribution["max"] = max(stats)
         distribution["count"] = len(stats)
         distribution["mean"] = mean(stats)
-        return distribution
+        for k, v in distribution.iteritems():
+            print "%s\t\t%0.2f" % (k, v)
+        print
     except ValueError:
-        return {}
+        print
 
 def compute_histogram(stats, unit="ms"):
     print "\nValue(%s)\t\tCount\t\tDistribution" % (unit)

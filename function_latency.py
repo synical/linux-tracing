@@ -39,8 +39,7 @@ class FunctionLatency(object):
         function_latencies = self.parse_latencies()
         self.latency_distribution = []
         print "\nLatency distribution of '%s'\n" % (self.function_filter)
-        for k, v in utils.compute_distribution(function_latencies).iteritems():
-            print "%s\t\t%0.2f" % (k, v)
+        utils.print_distribution(function_latencies)
 
     def trace(self):
         self.fg.enable_tracing()
