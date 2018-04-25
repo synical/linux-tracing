@@ -7,6 +7,10 @@ from time import sleep
 from tracing import utils
 from tracing.ftrace import block
 
+"""
+    TODO
+        * Move repeated I/O functions into ftrace modules for DRY
+"""
 
 class IoRaw(object):
 
@@ -23,15 +27,18 @@ class IoRaw(object):
         exit(0)
 
     def print_io(self):
-        device_io = [l.strip() for l in self.bt.get_trace_snapshot() if self.device in l]
+        if self.device:
+            device_io = [l.strip() for l in self.bt.get_trace_snapshot() if self.device in l]
+        else:
+            device_io = [l.strip() for l in self.bt.get_trace_snapshot()]
         if device_io:
             print "\n".join(device_io)
 
     def trace(self):
         self.bt.enable_tracing()
         try:
-            print "Raw I/O data for %s" % (self.device)
             while True:
+                print "Raw I/O data stats for last %s seconds" % (self.interval)
                 sleep(float(self.interval))
                 self.print_io()
         except KeyboardInterrupt:
@@ -39,7 +46,7 @@ class IoRaw(object):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--device", action="store", dest="device", required=True, help="<MAJ,MIN>")
+    parser.add_argument("-d", "--device", action="store", dest="device", required=False, help="<MAJ,MIN>")
     parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, help="Collection interval")
     parser.add_argument("-p", "--pid", action="store", dest="pid", default=False, help="Pid to filter")
     args = parser.parse_args()
