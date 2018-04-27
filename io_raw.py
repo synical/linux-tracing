@@ -41,7 +41,7 @@ class IoRaw(object):
         self.bt.enable_tracing(events=self.event_filter)
         try:
             while True:
-                print "Raw I/O data stats for last %s seconds" % (self.interval)
+                print "\nRaw I/O data for last %s seconds\n" % (self.interval)
                 sleep(float(self.interval))
                 self.print_io()
         except KeyboardInterrupt:
