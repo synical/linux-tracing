@@ -14,7 +14,7 @@ from tracing.ftrace import block
 
 class IoRaw(object):
 
-    def __init__(self, device=False, pid_filter=False, event_filter=False, interval=1):
+    def __init__(self, device=False, pid_filter=False, event_filter=False, stacktrace=False, interval=1):
         self.bt = block.Block()
         self.device = device
         self.event_filter = event_filter
@@ -24,8 +24,11 @@ class IoRaw(object):
             self.bt.set_filter("common_pid == %s" % (pid_filter))
         if event_filter:
             self.event_filter = event_filter.split(",")
+        if stacktrace:
+            self.bt.set_format_option("stacktrace", "1")
 
     def disable_and_exit(self):
+        self.bt.set_format_option("stacktrace", "0")
         self.bt.disable_tracing()
         exit(0)
 
@@ -39,6 +42,7 @@ class IoRaw(object):
 
     def trace(self):
         self.bt.enable_tracing(events=self.event_filter)
+        self.bt.set_format_option("stacktrace", "1")
         try:
             while True:
                 print "\nRaw I/O data for last %s seconds\n" % (self.interval)
@@ -53,12 +57,13 @@ def parse_args():
     parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, help="Collection interval")
     parser.add_argument("-p", "--pid", action="store", dest="pid", default=False, help="Pid to filter")
     parser.add_argument("-f", "--filter", action="store", dest="event_filter", default=False, help="Comma separated I/O event filter")
+    parser.add_argument("-s", "--stacktrace", action="store_true", dest="stacktrace", default=False, help="Capture stacktraces")
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
-    io = IoRaw(device=args.device, pid_filter=args.pid, event_filter=args.event_filter, interval=args.interval)
+    io = IoRaw(device=args.device, pid_filter=args.pid, event_filter=args.event_filter, stacktrace=args.stacktrace, interval=args.interval)
     io.trace()
 
 if __name__ == '__main__':
