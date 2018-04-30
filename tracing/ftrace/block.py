@@ -11,6 +11,7 @@ class Block(Ftrace):
     def disable_tracing(self, message=False):
         self.set_value("0", self.trace_enable_file)
         self.set_value("0", self.filter_file)
+        self.generic_disable_tracing()
         if message:
             self.exit_with_error(message)
 
