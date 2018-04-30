@@ -34,7 +34,6 @@ class IoRaw(object):
 
     def disable_and_exit(self):
         self.bt.set_format_option("stacktrace", "0")
-        self.bt.set_event_pids()
         self.bt.disable_tracing()
         exit(0)
 

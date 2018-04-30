@@ -38,7 +38,10 @@ class Ftrace(object):
 
     def generic_disable_tracing(self):
         self.generic_filter_pid("")
+        self.set_event_pids()
         self.set_value("nop", self.current_tracer_file)
+        self.set_value("0", self.trace_file)
+        self.set_value("0", self.snapshot_file)
 
     def generic_filter_pid(self, pid):
         self.set_value(pid, self.trace_pid_file)
