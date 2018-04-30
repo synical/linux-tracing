@@ -1,4 +1,9 @@
+from os import listdir
+
 from numpy import percentile,mean
+
+def get_tasks_for_pid(pid):
+    return [d for d in listdir("/proc/%s/task/" % (pid))]
 
 def print_distribution(stats):
     try:

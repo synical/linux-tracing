@@ -15,6 +15,7 @@ class Ftrace(object):
         self.trace_file = self.tracing_dir + "/trace"
         self.trace_option_dir = self.tracing_dir + "/options"
         self.trace_pid_file = self.tracing_dir + "/set_ftrace_pid"
+        self.set_event_pid_file = self.tracing_dir + "/set_event_pid"
         self.snapshot_file = self.tracing_dir + "/snapshot"
 
         self.required_config_options = [
@@ -64,6 +65,13 @@ class Ftrace(object):
         with open(self.snapshot_file) as f:
             data = [l for l in f.readlines() if l[0] != "#"]
         return data
+
+    def set_event_pids(self, pids=False):
+        if not pids:
+            self.set_value("", self.set_event_pid_file)
+            return
+        for pid in pids:
+            self.set_value(pid, self.set_event_pid_file)
 
     def set_format_option(self, option, value):
         self.set_value(value, "%s/%s" % (self.trace_option_dir, option))
