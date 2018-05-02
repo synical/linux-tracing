@@ -7,11 +7,6 @@ from time import sleep
 from tracing import utils
 from tracing.ftrace import block
 
-"""
-    TODO
-        * Move repeated I/O functions into ftrace modules for DRY
-"""
-
 class IoRaw(object):
 
     def __init__(self, device=False, pid_filter=False, event_filter=False, trace_tasks=False, stacktrace=False, interval=1):
