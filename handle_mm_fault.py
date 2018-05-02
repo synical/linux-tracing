@@ -3,6 +3,9 @@
 import argparse
 import re
 
+from time import sleep
+
+from tracing import utils
 from tracing.ftrace import kprobe
 
 """
@@ -11,10 +14,17 @@ from tracing.ftrace import kprobe
 
 class MMFault(object):
 
-    def __init__(self, pid_filter=None):
-        if pid_filter != None:
-            pid_filter = "common_pid == %s" % (pid_filter)
-        self.kp = kprobe.Kprobe(kprobe_filter=pid_filter)
+    def __init__(self, pid_filter=False, trace_tasks=False, interval=1):
+        self.interval = interval
+        self.kp = kprobe.Kprobe()
+
+        if pid_filter:
+            if trace_tasks:
+                pids = utils.get_tasks_for_pid(pid_filter)
+            else:
+                pids = [pid_filter]
+            self.kp.set_event_pids(pids=pids)
+
         self.fault_flags = [
             "FAULT_FLAG_WRITE",
             "FAULT_FLAG_MKWRITE",
@@ -26,10 +36,15 @@ class MMFault(object):
             "FAULT_FLAG_REMOTE",
             "FAULT_FLAG_INSTRUCTION",
         ]
+
         self.parsed_fault_flags = []
         self.fault_pid = ""
         self.probe = "p:handle_mm_fault handle_mm_fault vm_area_struct=%di address=%si flags=%dx"
         self.split_line = []
+
+    def disable_and_exit(self):
+        self.kp.disable_tracing()
+        exit(0)
 
     def parse_hex(self, hex_string):
         return bin(int(hex_string, 16))[2:].zfill(12)
@@ -57,23 +72,30 @@ class MMFault(object):
     def trace(self):
         self.kp.set_event(self.probe)
         self.kp.enable_tracing()
-        for line in self.kp.get_trace_snapshot():
-            split_line = filter(None, line.replace(":", "").split(" "))
-            self.fault_pid = split_line[0]
-            self.parse_probe_vars(line)
-            self.parse_fault_flags()
-            self.print_fault()
-        self.kp.disable_tracing()
+        try:
+            while True:
+                for line in self.kp.get_trace_snapshot():
+                    split_line = filter(None, line.replace(":", "").split(" "))
+                    if split_line:
+                        self.fault_pid = split_line[0]
+                        self.parse_probe_vars(line)
+                        self.parse_fault_flags()
+                        self.print_fault()
+                sleep(float(self.interval))
+        except KeyboardInterrupt:
+            self.disable_and_exit()
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--pid", action="store", dest="pid", required=False, help="PID")
+    parser.add_argument("-i", "--interval", action="store", dest="interval", default=1, help="Collection interval")
+    parser.add_argument("-t", "--tasks", action="store_true", dest="trace_tasks", default=False, help="Trace all tasks under PID")
     args = parser.parse_args()
     return args
 
 def main():
     args = parse_args()
-    mm = MMFault(pid_filter=args.pid)
+    mm = MMFault(pid_filter=args.pid, trace_tasks=False, interval=args.interval)
     mm.trace()
 
 if __name__ == '__main__':

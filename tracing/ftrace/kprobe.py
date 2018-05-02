@@ -22,6 +22,7 @@ class Kprobe(Ftrace):
         self.set_value("0", self.trace_enable_file)
         self.set_value("", self.events_file)
         self.set_value("", self.trace_file)
+        self.generic_disable_tracing()
         if message:
             self.exit_with_error(message)
 
